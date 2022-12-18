@@ -1,23 +1,43 @@
 const express = require("express");
+const cors = require("cors");
+const pool = require("./config");
+const pool2 = require("./config2");
 const app = express();
-const cors = require('cors');
-const mysql = require("mysql");
-var pool = mysql.createPool({
-  connectionLimit:4,
-  host: "housethat.in",
-  user: "u901480788_flat",
-  password: "Prateek@123",
-  database: "u901480788_flatbased",
-});
-
-pool.getConnection((err,connection)=> {
-  if(err)
-  throw err;
-  console.log('Database connected successfully');
-  connection.release();
-});
-
+ 
 app.use(express.json());
+app.use(
+    cors({
+        origin: ["http://localhost:3000"],
+        methods: ["GET", "POST"],
+        credentials: true,
+    })
+);
+app.post('/login', (req, res) => {
+ const username = req.body.username;
+ const password = req.body.password;
+ 
+ pool.query(
+     "SELECT * FROM users WHERE username = ? AND password = ?",
+     [username, password],
+     (err, result)=> {
+         if (err) {
+             res.send({err: err});
+         }
+ 
+         if (result.length > 0) {
+             res.send( result);
+             }else({message: "Wrong username/password comination!"});
+         }
+     
+ );
+});
+ 
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+
+
+
 
 app.use((err, req, res, next) => {
   console.log(err.stack);
@@ -28,9 +48,9 @@ app.use((err, req, res, next) => {
   });
 });
 app.use(cors());
-app.use(express.json());
-app.get("/data", (req, resp) => {
-  pool.query("select * from flatbased", (err, result) => {
+
+app.get("/flatdata", (req, resp) => {
+  pool2.query("select * from flatbased", (err, result) => {
     if (err) { resp.send("error in api") }
     else { resp.send(result) }
   })
